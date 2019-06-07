@@ -1,0 +1,43 @@
+const express = require('express')
+const users = express.Router()
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
+
+const User = require('../models/User')
+
+process.env.SECRET_KEY = 'secret'
+
+
+
+users.post('/login', (req, res) => {
+  User.findOne({
+    email: req.body.email
+  })
+    .then(user => {
+      if (user) {
+        if (bcrypt.compareSync(req.body.password, user.password)) {
+          const payload = {
+            _id: user._id,
+            
+
+            email: user.email
+          }
+          let token = jwt.sign(payload, process.env.SECRET_KEY, {
+            expiresIn: 1440
+          })
+          res.send(token)
+        } else {
+   
+          res.json({ error: 'Account not exist' })
+        }
+      } else {
+        res.json({ error: 'Account not exist' })
+      }
+    })
+    .catch(err => {
+      res.send('error: ' + err)
+    })
+})
+
+
+module.exports = users
